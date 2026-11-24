@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Oullin",
+    "slug": "oullin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#fffdf9"
+    },
+    "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permitir que o Oullin use sua localização para cadastrar o endereço de entrega."
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ],
+    "ios": {
+      "bundleIdentifier": "br.com.oullin.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Usamos sua localização para cadastrar o endereço de entrega."
+      },
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "br.com.oullin.app",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "backgroundColor": "#fffdf9"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "617caccf-05c3-49a3-aa89-0ebbb154a89e"
+      }
+    },
+    "owner": "allyson1244s-team"
+  }
+}
