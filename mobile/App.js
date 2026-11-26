@@ -13,12 +13,16 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AddressScreen from './AddressScreen';
+import DeliveryScreen from './DeliveryScreen';
 import {
   HomeScreen,
   NotificationsScreen,
   RegistrationCompleteScreen,
 } from './HomeScreens';
 import OnboardingScreen from './OnboardingScreen';
+import OrderSummaryScreen from './OrderSummaryScreen';
+import PayScreen from './PayScreen';
+import PixScreen from './PixScreen';
 import SearchScreen from './SearchScreen';
 
 const COLORS = {
@@ -40,6 +44,10 @@ const ROUTES = {
   profile: 'profile',
   address: 'address',
   notifications: 'notifications',
+  payment: 'payment',
+  pix: 'pix',
+  delivery: 'delivery',
+  summary: 'summary',
 };
 
 const TAB_ROUTES = {
@@ -222,11 +230,10 @@ function TabIcon({ label, active }) {
     );
   }
 
-  const iconStyle = [styles.tabIconShape, active && styles.activeTabIconShape];
   if (label === 'Buscar') {
     return (
       <View style={styles.searchIcon}>
-        <View style={iconStyle} />
+        <View style={[styles.tabIconShape, active && styles.activeTabIconShape]} />
         <View style={[styles.searchHandle, active && styles.activeSearchHandle]} />
       </View>
     );
@@ -325,7 +332,7 @@ function BottomNavigation({ activeTab, onSelectTab, bottomInset }) {
   );
 }
 
-function PlaceholderScreen({ tab }) {
+function PlaceholderScreen({ tab, onPay }) {
   const isOrders = tab === ROUTES.orders;
   const isProfile = tab === ROUTES.profile;
 
@@ -341,6 +348,11 @@ function PlaceholderScreen({ tab }) {
             ? 'Para completar seu perfil alimentar e endereço, acesse as notificações.'
           : 'Esta tela ainda está sendo preparada.'}
       </Text>
+      {isOrders && (
+        <Pressable accessibilityRole="button" onPress={onPay} style={styles.paymentButton}>
+          <Text style={styles.paymentButtonText}>Ir para pagamento</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -409,13 +421,41 @@ function AppContent() {
   }
 
   const isOverlayRoute = currentRoute === ROUTES.address || currentRoute === ROUTES.notifications;
+  const isPaymentRoute = currentRoute === ROUTES.payment;
+  const isPaymentFlowRoute = isPaymentRoute || currentRoute === ROUTES.pix || currentRoute === ROUTES.delivery || currentRoute === ROUTES.summary;
   const activeTab = Object.keys(TAB_ROUTES).find((tab) => TAB_ROUTES[tab] === currentRoute);
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
       <View style={styles.mainContent}>
-        {currentRoute === ROUTES.notifications ? (
+        {currentRoute === ROUTES.summary ? (
+          <OrderSummaryScreen
+            onBack={goBack}
+            onFinishPayment={() => resetNavigation(ROUTES.delivery)}
+            onSelectTab={(tab) => resetNavigation(TAB_ROUTES[tab])}
+          />
+        ) : currentRoute === ROUTES.delivery ? (
+          <DeliveryScreen
+            onBack={goBack}
+            onSelectTab={(tab) => resetNavigation(TAB_ROUTES[tab])}
+            onViewOrders={() => resetNavigation(ROUTES.orders)}
+            address={selectedAddress ? [selectedAddress.street, selectedAddress.number].filter(Boolean).join(', ') : 'Av. dos Autonomistas, 1496'}
+          />
+        ) : isPaymentRoute ? (
+          <PayScreen
+            onBack={goBack}
+            onFinishPayment={() => resetNavigation(ROUTES.delivery)}
+            onChoosePix={() => navigate(ROUTES.pix)}
+            onOpenSummary={() => navigate(ROUTES.summary)}
+            onSelectTab={(tab) => resetNavigation(TAB_ROUTES[tab])}
+          />
+        ) : currentRoute === ROUTES.pix ? (
+          <PixScreen
+            onBack={goBack}
+            onSelectTab={(tab) => resetNavigation(TAB_ROUTES[tab])}
+          />
+        ) : currentRoute === ROUTES.notifications ? (
           <NotificationsScreen
             onBack={goBack}
             onConfigure={() => navigate(ROUTES.preferences)}
@@ -455,10 +495,10 @@ function AppContent() {
             setSelections={setSelections}
           />
         ) : (
-          <PlaceholderScreen tab={currentRoute} />
+          <PlaceholderScreen tab={currentRoute} onPay={() => navigate(ROUTES.payment)} />
         )}
       </View>
-      {!isOverlayRoute && (
+      {!isOverlayRoute && !isPaymentFlowRoute && (
         <BottomNavigation
           activeTab={activeTab}
           bottomInset={insets.bottom}
@@ -750,5 +790,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 10,
     textAlign: 'center',
+  },
+  paymentButton: {
+    alignItems: 'center',
+    backgroundColor: COLORS.amber,
+    borderRadius: 20,
+    marginTop: 22,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  paymentButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
